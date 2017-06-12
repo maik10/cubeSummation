@@ -11,6 +11,5 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'CubeController@index');
+Route::name('process')->post('/process', 'CubeController@process');
