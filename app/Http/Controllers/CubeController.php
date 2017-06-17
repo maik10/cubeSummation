@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 use App\Http\Requests\processPostRequest;
 
@@ -18,6 +19,8 @@ class CubeController extends Controller
 
 	public function process (processPostRequest $request) {
 
+		Session::put('lq', $request->command);
+		
 		$parts = explode(' ', $request->command);
 
 		$action = $parts[0][0];
@@ -28,10 +31,9 @@ class CubeController extends Controller
 			$y = (int)$parts[2];
 			$z = (int)$parts[3];
 			$w = (int)$parts[4];
-			$this->update_matrix($x,$y,$z,$w);
+			$response = $this->update_matrix($x,$y,$z,$w);
 
 		}elseif($action == 'Q'){
-
 			$x1 = (int)$parts[1];
 			$y1 = (int)$parts[2];
 			$z1 = (int)$parts[3];
@@ -39,36 +41,43 @@ class CubeController extends Controller
 			$y2 = (int)$parts[5];
 			$z2 = (int)$parts[6];
 
-			dd ( $this->query_matrix($x1,$y1,$z1,$x2,$y2,$z2)."\n" );
+			$response = $this->query_matrix($x1,$y1,$z1,$x2,$y2,$z2);
 
 		}else{
 
 			if(count($parts)==2){
 
-				$data = array();
+				$response = $this->create_matrix();
 
-			}elseif(count($parts)==1){
-				//test count
-			}else{
-				#echo("INVALID LINE:$line");
 			}
 
 		}
 
-		dd( $parts );
+		return view('cube.commandline', ['response' => $response, 'lq' => Session::get('lq') ]);
+
+	}
+
+	private function create_matrix(){
+
+		Session::put('data', array());
+
+		return 'Creado';
 
 	}
 
 	private function update_matrix($x,$y,$z,$w){
 		
-		global $data;
+		$data = Session::get('data');
 		$data["$x,$y,$z"] = $w;
+		Session::put('data', $data);
+
+		return 'Actualizado';
 
 	}
 
 	private function query_matrix($x1,$y1,$z1,$x2,$y2,$z2){
 
-		global $data;
+		$data = Session::get('data');
 		$sum = 0;
 		foreach($data as $key=>$v){
 			$parts = explode(",",$key);
